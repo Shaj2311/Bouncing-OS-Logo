@@ -7,15 +7,13 @@ int main()
 	//initialize buffers
 	char* buf = malloc(256);
 	char** art = malloc(128 * sizeof(char*));
-	char** plainArt = malloc(128 * sizeof(char*));
 	for(int i = 0; i < 128; i++)
 	{
 		art[i] = malloc(2048);
-		plainArt[i] = malloc(2048);
 	}
 
 	//get OS logo art from fastfetch
-	FILE* artFile = popen("fastfetch --structure none", "r");
+	FILE* artFile = popen("fastfetch --pipe none --structure none", "r");
 	if(!artFile)
 	{
 		puts("An error occured");
@@ -71,21 +69,26 @@ int main()
 			}
 		}
 		*dest = '\0';
-		printf("Got a line:\t%s\n", art[i]);
-		printf("Height: %d\n", height);
 
 		int currWidth = strlen(art[i]);
-		printf("Currwidth: %d\n", currWidth);
 		if(currWidth > width) width = currWidth;
 		height++;
 
 		i++;
 	}
+	free(buf);
 
-
+	//test print
 	for(int j = 0; j < i; j++)
 	{
 		printf("%s", art[j]);
 	}
 	printf("Width: %d\nHeight: %d\n", width, height);
+
+
+	for(int i = 0; i < 128; i++)
+	{
+		free(art[i]);
+	}
+	free(art);
 }
