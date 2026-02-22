@@ -3,6 +3,9 @@
 #include <string.h>
 #include <regex.h>
 
+#define ROWS 64
+#define COLS 256
+
 char** getLogo(int* width, int* height)
 {
 	//initialize buffers
@@ -82,17 +85,48 @@ char** getLogo(int* width, int* height)
 
 	return art;
 }
+
+void printLogo(char** logo, int width, int height, unsigned int row, unsigned int col)
+{
+	//return if out of bounds
+	if(row + height > ROWS) return;
+	if(col + width > COLS) return;
+
+	char* positionCode = malloc(16);
+	for(int i = 0; i < height; i++)
+	{
+		//form escape code to go to desired position
+		strcat(positionCode, "\033[");
+		char str[8];
+		snprintf(str, sizeof(str), "%d", row + i);
+		strcat(positionCode, str);
+		strcat(positionCode, ";");
+		snprintf(str, sizeof(str), "%d", col);
+		strcat(positionCode, str);
+		strcat(positionCode, "H");
+
+		//go to position
+		printf("%s", positionCode);
+
+		//print a line of art
+		printf("%s", logo[i]);
+
+	}
+	free(positionCode);
+}
+
 int main()
 {
 	int width, height;
 	char** art = getLogo(&width, &height);
 
-	//test print
-	for(int j = 0; j < height; j++)
-	{
-		printf("%s", art[j]);
-	}
-	printf("Width: %d\nHeight: %d\n", width, height);
+//	//test print
+//	for(int j = 0; j < height; j++)
+//	{
+//		printf("%s", art[j]);
+//	}
+//	printf("Width: %d\nHeight: %d\n", width, height);
+	printLogo(art, width, height, 40, 200);
 
 
 	for(int i = 0; i < 128; i++)
