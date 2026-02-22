@@ -3,8 +3,39 @@
 #include <string.h>
 #include <regex.h>
 
-#define ROWS 64
-#define COLS 256
+void getDimensions(int* rows, int* cols)
+{
+	#ifdef _WIN32
+		#include <windows.h>
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+		HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+
+		if (!GetConsoleScreenBufferInfo(h, &csbi))
+			return 0;
+
+		*width  = csbi.srWindow.Right  - csbi.srWindow.Left + 1;
+		*height = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;
+		return;
+	#endif
+
+	#ifdef __linux__
+		#include <unistd.h>
+		#include <sys/ioctl.h>
+		struct winsize w;
+
+		if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1)
+			return;
+
+		*cols  = w.ws_col;
+		*rows = w.ws_row;
+		return;
+	#endif
+
+	//fallback to 256 x 64
+	*cols = 256;
+	*rows = 64;
+	return;
+}
 
 char** getLogo(int* width, int* height)
 {
@@ -86,11 +117,11 @@ char** getLogo(int* width, int* height)
 	return art;
 }
 
-void printLogo(char** logo, int width, int height, unsigned int row, unsigned int col)
+void printLogo(char** logo, int width, int height, int termRows, int termCols, unsigned int row, unsigned int col)
 {
 	//return if out of bounds
-	if(row + height > ROWS) return;
-	if(col + width > COLS) return;
+	if(row + height > termRows) return;
+	if(col + width > termCols) return;
 
 	char* positionCode = malloc(16);
 	for(int i = 0; i < height; i++)
@@ -117,16 +148,15 @@ void printLogo(char** logo, int width, int height, unsigned int row, unsigned in
 
 int main()
 {
+	//get dimensions of terminal window
+	int terminalRows, terminalCols;
+	getDimensions(&terminalRows, &terminalCols);
+
+	//get logo art
 	int width, height;
 	char** art = getLogo(&width, &height);
 
-//	//test print
-//	for(int j = 0; j < height; j++)
-//	{
-//		printf("%s", art[j]);
-//	}
-//	printf("Width: %d\nHeight: %d\n", width, height);
-	printLogo(art, width, height, 40, 200);
+	printLogo(art, width, height, terminalRows, terminalCols, 40, 200);
 
 
 	for(int i = 0; i < 128; i++)
