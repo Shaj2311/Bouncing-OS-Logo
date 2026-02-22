@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
-int main()
+
+char** getLogo(int* width, int* height)
 {
 	//initialize buffers
 	char* buf = malloc(256);
@@ -26,7 +27,8 @@ int main()
 	regcomp(&regex, "\033\\[(?!([0-9;]*m))([0-9;?]*[A-Za-z])", REG_EXTENDED);
 
 	//calculate width and height while storing logo
-	int width = 0, height = 0;
+	*width = 0;
+	*height = 0;
 	int i = 0;
 
 	//read line by line
@@ -71,15 +73,22 @@ int main()
 		*dest = '\0';
 
 		int currWidth = strlen(art[i]);
-		if(currWidth > width) width = currWidth;
-		height++;
+		if(currWidth > *width) *width = currWidth;
+		(*height)++;
 
 		i++;
 	}
 	free(buf);
 
+	return art;
+}
+int main()
+{
+	int width, height;
+	char** art = getLogo(&width, &height);
+
 	//test print
-	for(int j = 0; j < i; j++)
+	for(int j = 0; j < height; j++)
 	{
 		printf("%s", art[j]);
 	}
