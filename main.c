@@ -3,10 +3,16 @@
 #include <string.h>
 #include <regex.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#ifdef __linux__
+#include <unistd.h>
+#include <sys/ioctl.h>
+#endif
 void getDimensions(int* rows, int* cols)
 {
 	#ifdef _WIN32
-		#include <windows.h>
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
 		HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -19,8 +25,6 @@ void getDimensions(int* rows, int* cols)
 	#endif
 
 	#ifdef __linux__
-		#include <unistd.h>
-		#include <sys/ioctl.h>
 		struct winsize w;
 
 		if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1)
@@ -156,7 +160,7 @@ int main()
 	int width, height;
 	char** art = getLogo(&width, &height);
 
-	printLogo(art, width, height, terminalRows, terminalCols, 40, 200);
+	printLogo(art, width, height, terminalRows, terminalCols, 20, 0);
 
 
 	for(int i = 0; i < 128; i++)
