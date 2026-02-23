@@ -10,6 +10,15 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #endif
+
+typedef enum
+{
+	RIGHT,
+	LEFT,
+	UP,
+	DOWN
+} direction_t;
+
 void getDimensions(int* rows, int* cols)
 {
 	#ifdef _WIN32
@@ -128,6 +137,7 @@ void printLogo(char** logo, int width, int height, int termRows, int termCols, u
 	if(col + width > termCols) return;
 
 	char* positionCode = malloc(16);
+	*positionCode = 0;
 	for(int i = 0; i < height; i++)
 	{
 		//form escape code to go to desired position
@@ -150,18 +160,76 @@ void printLogo(char** logo, int width, int height, int termRows, int termCols, u
 	free(positionCode);
 }
 
+void updateDirection(direction_t* dir, int* currRow, int* currCol, int artWidth, int artHeight, int terminalRows, int terminalCols)
+{
+	if(*currRow <= 1) dir[0] = DOWN;
+	if(*currRow + artHeight >= terminalRows) dir[0] = UP;
+	if(*currCol <= 0) dir[1] = RIGHT;
+	if(*currCol + artWidth >= terminalCols) dir[1] = LEFT;
+
+
+	switch(dir[0])
+	{
+		case UP:
+			(*currRow)--;
+			break;
+		case DOWN:
+			(*currRow)++;
+			break;
+	}
+	switch(dir[1])
+	{
+		case LEFT:
+			(*currCol)-=2;
+			break;
+		case RIGHT:
+			(*currCol)+=2;
+			break;
+	}
+}
+
 int main()
 {
-	//get dimensions of terminal window
-	int terminalRows, terminalCols;
-	getDimensions(&terminalRows, &terminalCols);
-
 	//get logo art
-	int width, height;
-	char** art = getLogo(&width, &height);
+	int artWidth, artHeight;
+	char** art = getLogo(&artWidth, &artHeight);
 
-	printLogo(art, width, height, terminalRows, terminalCols, 20, 0);
+	//initialize position and direction
+	int currRow = 0, currCol = 0;
+	direction_t dir[2] = {DOWN, RIGHT};
 
+	//hide cursor
+	printf("\033[25l");
+
+	//animation loop
+	while(1)
+	{
+		//clear screen
+		printf("\033[2J");
+
+		//get dimensions of terminal window
+		int terminalRows, terminalCols;
+		getDimensions(&terminalRows, &terminalCols);
+
+		//update direction
+		updateDirection(
+				dir,
+				&currRow, &currCol,
+				artWidth, artHeight,
+				terminalRows, terminalCols
+				);
+
+		//draw logo
+		printLogo(
+				art,
+				artWidth, artHeight,
+				terminalRows, terminalCols,
+				currRow, currCol
+			 );
+
+		//TEST
+		usleep(100000);
+	}
 
 	for(int i = 0; i < 128; i++)
 	{
