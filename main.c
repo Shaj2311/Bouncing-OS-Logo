@@ -25,10 +25,10 @@ void getDimensions(int* rows, int* cols)
 		HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 
 		if (!GetConsoleScreenBufferInfo(h, &csbi))
-			return 0;
+			return;
 
-		*width  = csbi.srWindow.Right  - csbi.srWindow.Left + 1;
-		*height = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;
+		*cols  = csbi.srWindow.Right  - csbi.srWindow.Left + 1;
+		*rows = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;
 		return;
 	#endif
 
@@ -222,8 +222,14 @@ int main()
 				currRow, currCol
 			 );
 
-		//TEST
+		//Frame delay
+		#ifdef __linux__
 		usleep(100000);
+		continue;
+		#endif
+		#ifdef _WIN32
+		Sleep(100000);
+		#endif
 	}
 
 	for(int i = 0; i < 128; i++)
