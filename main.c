@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <regex.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -69,10 +68,6 @@ char** getLogo(int* width, int* height)
 		exit(1);
 	}
 
-	//Store logo in memory while removing (non-coloring) escape codes
-	regex_t regex;
-	regcomp(&regex, "\033\\[(?!([0-9;]*m))([0-9;?]*[A-Za-z])", REG_EXTENDED);
-
 	//calculate width and height while storing logo
 	*width = 0;
 	*height = 0;
@@ -86,7 +81,7 @@ char** getLogo(int* width, int* height)
 
 		char* src = buf;
 		char* dest = art[i];
-		regmatch_t match;
+		//regmatch_t match;
 
 		//remove non-color ascii escape codes
 		while(*src)
