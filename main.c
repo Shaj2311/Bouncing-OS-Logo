@@ -193,7 +193,11 @@ void updateDirection(direction_t* dir, int* currRow, int* currCol, int artWidth,
 
 int main()
 {
+	//set keyboard interrupt handler
 	signal(SIGINT, handleInterrupt);
+
+	//move to new buffer
+	printf("\033[?1049h");
 
 	//get logo art
 	int artWidth, artHeight;
@@ -248,6 +252,8 @@ int main()
 	}
 	free(art);
 
-	printf("\033[2J");
+	//Return to initial buffer
+	printf("\033[?1049l");
+
 	return 0;
 }
