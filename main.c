@@ -13,6 +13,32 @@ typedef enum
 	DOWN
 } direction_t;
 
+int getLineWidth(char* line, int size)
+{
+	int length = 0;
+
+	int i = 0;
+	while(i < size)
+	{
+		//ESC[ found
+		if(line[i+1] && line[i] == '\033' && line[i+1] == '[')
+		{
+			i += 2;
+			//skip to final character
+			while((line[i] >= '0' && line[i] <= '9') || line[i] == ';')
+				i++;
+			//skip final character
+			i++;
+		}
+
+		length++;
+		i++;
+	}
+
+	return length;
+}
+
+
 int hasCursorMovementCode(char* line, int size)
 {
 	int i = 0;
@@ -89,7 +115,7 @@ char** getLogo(int* width, int* height)
 		strcpy(art[i], buf);
 
 		//update width and height
-		int currWidth = strlen(art[i]);
+		int currWidth = getLineWidth(art[i], strlen(art[i]));
 		if(currWidth > *width) *width = currWidth;
 		(*height)++;
 
