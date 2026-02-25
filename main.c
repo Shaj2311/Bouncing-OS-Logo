@@ -2,13 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-#ifdef __linux__
 #include <unistd.h>
 #include <sys/ioctl.h>
-#endif
 
 typedef enum
 {
@@ -26,7 +21,7 @@ int hasCursorMovementCode(char* line, int size)
 		//ESC[ found
 		if(line[i+1] && line[i] == '\033' && line[i+1] == '[')
 		{
-			line += 2;
+			i += 2;
 			//skip to final character
 			while((line[i] >= '0' && line[i] <= '9') || line[i] == ';')
 				i++;
@@ -42,28 +37,14 @@ int hasCursorMovementCode(char* line, int size)
 
 void getDimensions(int* rows, int* cols)
 {
-	#ifdef _WIN32
-		CONSOLE_SCREEN_BUFFER_INFO csbi;
-		HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+	struct winsize w;
 
-		if (!GetConsoleScreenBufferInfo(h, &csbi))
-			return;
-
-		*cols  = csbi.srWindow.Right  - csbi.srWindow.Left + 1;
-		*rows = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1)
 		return;
-	#endif
 
-	#ifdef __linux__
-		struct winsize w;
-
-		if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1)
-			return;
-
-		*cols  = w.ws_col;
-		*rows = w.ws_row;
-		return;
-	#endif
+	*cols  = w.ws_col;
+	*rows = w.ws_row;
+	return;
 
 	//fallback to 256 x 64
 	*cols = 256;
@@ -220,13 +201,7 @@ int main()
 			 );
 
 		//Frame delay
-		#ifdef __linux__
 		usleep(100000);
-		continue;
-		#endif
-		#ifdef _WIN32
-		Sleep(100000);
-		#endif
 	}
 
 	for(int i = 0; i < 128; i++)
