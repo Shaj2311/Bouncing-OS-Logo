@@ -18,6 +18,28 @@ typedef enum
 	DOWN
 } direction_t;
 
+int hasCursorMovementCode(char* line, int size)
+{
+	int i = 0;
+	while(i < size)
+	{
+		//ESC[ found
+		if(line[i+1] && line[i] == '\033' && line[i+1] == '[')
+		{
+			line += 2;
+			//skip to final character
+			while((line[i] >= '0' && line[i] <= '9') || line[i] == ';')
+				i++;
+
+			if(line[i] == 'G' || line[i] == 'A')
+				return 1;
+		}
+		i++;
+	}
+
+	return 0;
+}
+
 void getDimensions(int* rows, int* cols)
 {
 	#ifdef _WIN32
@@ -53,6 +75,7 @@ char** getLogo(int* width, int* height)
 {
 	//initialize buffers
 	char* buf = malloc(256);
+	char* lastLine = malloc(256);
 	char** art = malloc(128 * sizeof(char*));
 	for(int i = 0; i < 128; i++)
 	{
@@ -77,50 +100,24 @@ char** getLogo(int* width, int* height)
 	while(fgets(buf, 256, artFile))
 	{
 		if(i >= 128) break;
-		if(strcmp(buf, "\n") == 0) break;
+		//check if previous line was the last
+		if(buf[0] == '\n' && hasCursorMovementCode(lastLine, strlen(lastLine)))
+			break;
 
-		char* src = buf;
-		char* dest = art[i];
-		//regmatch_t match;
+		//copy line to art
+		strcpy(art[i], buf);
 
-		//remove non-color ascii escape codes
-		while(*src)
-		{
-			if(*src == '\033' && src[1] == '[')
-			{
-				// Check if this is a color (ends with 'm')
-				char* seq = src + 2;
-				int isColor = 0;
-				while(*seq && *seq != 'm' && ((*seq >= '0' && *seq <= '9') || *seq == ';')) seq++;
-				if(*seq == 'm') isColor = 1;
-
-				if(isColor)
-				{
-					// Copy the entire color sequence
-					seq++; // include 'm'
-					while(src < seq) *dest++ = *src++;
-				}
-				else
-				{
-					// Skip the escape sequence
-					while(*src && !((*src >= 'A' && *src <= 'Z') || (*src >= 'a' && *src <= 'z'))) src++;
-					if(*src) src++; // skip the command char
-				}
-			}
-			else
-			{
-				*dest++ = *src++;
-			}
-		}
-		*dest = '\0';
-
+		//update width and height
 		int currWidth = strlen(art[i]);
 		if(currWidth > *width) *width = currWidth;
 		(*height)++;
 
+		strcpy(lastLine, buf);
+
 		i++;
 	}
 	free(buf);
+	free(lastLine);
 
 	return art;
 }
