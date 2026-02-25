@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <signal.h>
 
 typedef enum
 {
@@ -12,6 +12,10 @@ typedef enum
 	UP,
 	DOWN
 } direction_t;
+
+volatile int interruptReceived = 0;
+
+void handleInterrupt(int signal){interruptReceived = 1;}
 
 int getLineWidth(char* line, int size)
 {
@@ -189,6 +193,8 @@ void updateDirection(direction_t* dir, int* currRow, int* currCol, int artWidth,
 
 int main()
 {
+	signal(SIGINT, handleInterrupt);
+
 	//get logo art
 	int artWidth, artHeight;
 	char** art = getLogo(&artWidth, &artHeight);
@@ -203,6 +209,12 @@ int main()
 	//animation loop
 	while(1)
 	{
+		//check interrupt
+		if(interruptReceived)
+		{
+			break;
+		}
+
 		//clear screen
 		printf("\033[2J");
 
@@ -235,4 +247,7 @@ int main()
 		free(art[i]);
 	}
 	free(art);
+
+	printf("\033[2J");
+	return 0;
 }
