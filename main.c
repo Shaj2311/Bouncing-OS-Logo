@@ -14,7 +14,6 @@ typedef enum
 } direction_t;
 
 volatile int interruptReceived = 0;
-
 void handleInterrupt(int signal){interruptReceived = 1;}
 
 int getLineWidth(char* line, int size)
@@ -86,7 +85,6 @@ char** getLogo(int* width, int* height)
 {
 	//initialize buffers
 	char* buf = malloc(256);
-	char* lastLine = malloc(256);
 	char** art = malloc(128 * sizeof(char*));
 	for(int i = 0; i < 128; i++)
 	{
@@ -107,13 +105,15 @@ char** getLogo(int* width, int* height)
 	*height = 0;
 	int i = 0;
 
+	int isLastLine = 0;
+
 	//read line by line
 	while(fgets(buf, 256, artFile))
 	{
 		if(i >= 128) break;
 		//check if previous line was the last
-		if(buf[0] == '\n' && hasCursorMovementCode(lastLine, strlen(lastLine)))
-			break;
+		if(hasCursorMovementCode(buf, strlen(buf)))
+			isLastLine = 1;
 
 		//copy line to art
 		strcpy(art[i], buf);
@@ -123,12 +123,13 @@ char** getLogo(int* width, int* height)
 		if(currWidth > *width) *width = currWidth;
 		(*height)++;
 
-		strcpy(lastLine, buf);
-
 		i++;
+
+		//exit if last line
+		if(isLastLine)
+			break;
 	}
 	free(buf);
-	free(lastLine);
 
 	return art;
 }
@@ -179,6 +180,8 @@ void updateDirection(direction_t* dir, int* currRow, int* currCol, int artWidth,
 		case DOWN:
 			(*currRow)++;
 			break;
+		default:
+			break;
 	}
 	switch(dir[1])
 	{
@@ -187,6 +190,8 @@ void updateDirection(direction_t* dir, int* currRow, int* currCol, int artWidth,
 			break;
 		case RIGHT:
 			(*currCol)+=2;
+			break;
+		default:
 			break;
 	}
 }
